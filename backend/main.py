@@ -4,8 +4,8 @@ from langchain.schema import HumanMessage, AIMessage, SystemMessage
 import os
 from dotenv import load_dotenv
 import uvicorn
-from app.api.titanic.model.titanic_model import TitanicModel
 from app.main_router import router
+import icecream as ic
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -78,4 +78,8 @@ def read_item(item_id: int, q: str = None):
 
 
 if __name__ == "__main__":
+    import os
+    import uvicorn
+    os.chdir(os.getcwd() )
+    print(f'{os.getcwd()}')
     uvicorn.run(app, host="localhost", port=8000)

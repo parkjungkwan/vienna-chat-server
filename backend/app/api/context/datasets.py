@@ -1,12 +1,13 @@
 from dataclasses import dataclass
+import pandas as pd
 
 @dataclass
-class DataSets: 
+class DataSets(object): 
     _fname: str = '' # file name
     _dname: str = '' # data path
     _sname: str = '' # save path
-    _train: object = None
-    _test: object = None
+    _train: pd.DataFrame = None
+    _test: pd.DataFrame = None
     _id: str = ''
     _label: str = ''
     

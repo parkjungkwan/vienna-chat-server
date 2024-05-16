@@ -2,50 +2,56 @@
 from dataclasses import dataclass
 import pandas as pd
 import numpy as np
-from app.api.context.data_sets import DataSets
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import KFold, cross_val_score
+from app.api.context.datasets import DataSets
 from app.api.context.models import Models
 from icecream import ic
 
-
 class TitanicModel(object):
-    
-    model = Models()
-    dataset = DataSets()
+
+    def __init__(self):
+        self.model = Models()
+        self.dataset = DataSets()
 
     def preprocess(self, train_fname, test_fname) -> object:
-        this = self.dataset
-        that = self.model
+        print(f'--- TitanicModel 전처리 시작 ----')
+        this =  self.model
+        that = self.dataset
+        print(f'--- Print, Print ----')
+        print(this)
+        print(that)
+        path = 'C:\\Users\\bitcamp\\kubernetes\\chat-server\\backend\\app\\api\\context\\data\\'
         feature = ['PassengerId', 'Survived', 'Pclass', 'Name', 'Sex', 'Age', 'SibSp', 'Parch', 'Ticket', 'Fare', 'Cabin', 'Embarked']
         # 데이터셋은 Train과 Test, Validation 3종류로 나뉘어져 있다.
-        this.train = that.new_dataframe_no_index(train_fname)
-        this.test = that.new_dataframe_no_index(test_fname)
+        this.train = that.new_dataframe_no_index(f'{path}{train_fname}')
+        this.test = that.new_dataframe_no_index(f'{path}{test_fname}')
         this.id = this.test['PassengerId']
         this.label = this.train['Survived']
-        this.train = self.drop_feature(this,'Survived')
-        this = self.drop_feature(this, 'SibSp', 'Parch', 'Cabin', 'Ticket')
+        this.train = self.drop_feature_in_train(this,'Survived')
+        this.train = self.drop_feature_in_train(this.train,'SibSp', 'Parch', 'Cabin', 'Ticket')
+        this.test = self.drop_feature_in_test(this.test,'SibSp', 'Parch', 'Cabin', 'Ticket')
+        # this = self.drop_feature(this, 'SibSp', 'Parch', 'Cabin', 'Ticket')
         this = self.extract_title_from_name(this)
         title_mapping = self.remove_duplicate_title(this)
         this = self.title_nominal(this, title_mapping)
         this = self.drop_feature(this, 'Name')
-        
         this = self.sex_nominal(this)
         this = self.drop_feature(this, 'Sex')
+        this = self.embarked_nominal(this)  
         self.df_info(this)
-        # this = self.embarked_nominal(this)  
-        # this = self.age_ratio(this)
-        # this = self.drop_feature(this, 'Age')
-        # this = self.pclass_ordinal(this)
-        # this = self.fare_ratio(this)
-        # this = self.drop_feature(this, "Fare")
-        # self.df_info(this)
-        # k_fold = self.create_k_fold()
-        # accuracy = self.get_accuracy(this, k_fold)
-        # ic(accuracy)
+        this = self.age_ratio(this)
+        this = self.drop_feature(this, 'Age')
+        this = self.pclass_ordinal(this)
+        this = self.fare_ratio(this)
+        this = self.drop_feature(this, "Fare")
+      
+        k_fold = self.create_k_fold()
+        accuracy = self.get_accuracy(this, k_fold)
+        ic(accuracy)
         
         
         return this
-    
-
  
 
     
@@ -62,6 +68,16 @@ class TitanicModel(object):
         print('='*50)
 
     
+    @staticmethod
+    def drop_feature_in_train(this, *feature) -> object:
+        [i.drop(j, axis=1, inplace=True) for j in feature for i in [this]]
+        return this
+    
+
+    @staticmethod
+    def drop_feature_in_test(this, *feature) -> object:
+        [i.drop(j, axis=1, inplace=True) for j in feature for i in [this]]
+        return this
 
     @staticmethod
     def drop_feature(this, *feature) -> object:
@@ -98,10 +114,7 @@ class TitanicModel(object):
     
     # ['PassengerId', 'Survived', 'Pclass', 'Name', 'Sex', 'Age', 'SibSp', 'Parch', 'Ticket', 'Fare', 'Cabin', 'Embarked']
 
-    @staticmethod
-    def embarked_nominal(this) -> pd.DataFrame:
-       
-        return this
+
     
     @staticmethod
     def pclass_ordinal(this) -> pd.DataFrame:
@@ -176,14 +189,48 @@ class TitanicModel(object):
     
     @staticmethod
     def sex_nominal(this) -> pd.DataFrame:
-        this.train
+        gender_mapping = {'male': 0, 'female': 1}
+        for these in [this.train, this.test]:
+            these['Gender'] = these['Sex'].map(gender_mapping)
+        return this
+    
+    @staticmethod
+    def embarked_nominal(this) -> pd.DataFrame:
+        embarked_mapping = {'S': 1, 'C': 2, 'Q': 3}
+        for these in [this.train, this.test]:
+            these['Embarked'] = these['Embarked'].map(embarked_mapping)
+        return this
 
     @staticmethod
     def fare_ratio(this) -> pd.DataFrame:
 
+        bins = [-1, 8, 15, 31, np.inf]
+        labels = ['Unknown', 'Low', 'Mid', 'High']
+        fare_mapping = {'Unknown': 0, 'Low': 1, 'Mid': 2, 'High': 3}
+        for these in [this.train, this.test]:
+            these['FareBand'] = pd.cut(these['Fare'], bins, labels=labels)
+            these['FareBand'] = these['FareBand'].map(fare_mapping)
+
         return this
+    
+    @staticmethod
+    def create_k_fold() -> object:
+        return KFold(n_splits=10, shuffle=True, random_state=0)
+    
+    @staticmethod
+    def learning(self, train_fname, test_fname) -> object:
+        this = self.preprocess(train_fname, test_fname)
+        print(f'학습 시작')
+        k_fold = self.create_k_fold()
+        accuracy = self.get_accuracy(this, k_fold)
+        ic(f'사이킷런 알고리즘 정확도: {accuracy}')
+        return accuracy
+
+    @staticmethod
+    def get_accuracy(this, k_fold) -> object:
+        score = cross_val_score(RandomForestClassifier(), this.train, this.label,
+                                 cv=k_fold, n_jobs=1, scoring='accuracy')
+        return round(np.mean(score)*100, 2)
    
     
-
-
 

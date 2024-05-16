@@ -1,11 +1,13 @@
 from dataclasses import dataclass
-from app.api.titanic.model.titanic_model import TitanicModel
 import pandas as pd
+
+from app.api.titanic.model.titanic_model import TitanicModel
 
 
 class TitanicService:
 
-    model = TitanicModel()
+    def __init__(self) -> None:
+        self.model = TitanicModel()
 
     def preprocess(self):
         print(f'전처리 시작')

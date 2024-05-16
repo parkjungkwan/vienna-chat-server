@@ -7,18 +7,52 @@ class TitanicService:
 
     model = TitanicModel()
 
-    def process(self):
-        print(f'프로세스 시작')
-        train_model = self.new_model('train.csv')
-        test_model = self.new_model('test.csv')
-        print(f'트레인 컬럼 : {train_model.columns}')
-        print(f'테스트 컬럼 : {test_model.columns}')
+    def preprocess(self):
+        print(f'전처리 시작')
+        self.model.preprocess('train.csv', 'test.csv')
 
-    def new_model(self, payload) -> object:
+
+    def modeling(self):
+        print(f'모델링 시작')
         this = self.model
-        this.context = './data/'
-        this.fname = payload
-        return pd.read_csv(this.context + this.fname)
+
+    def learning(self):
+        print(f'학습 시작')
+        print(f'결정트리를 활용한 검증 정확도: ')
+        print(f'랜덤프레스트를 활용한 검증 정확도: ')
+        print(f'나이브베이즈를 활용한 검증 정확도: ')
+        print(f'KNN를 활용한 검증 정확도: ')
+        print(f'SVM를 활용한 검증 정확도: ')
+        this = self.model
+
+
+    def postprocessing(self):
+        print(f'후처리 시작')
+        this = self.model
+
+    def submit(self):
+        print(f'제출 시작')
+        this = self.model
+
+    
+        
+
+
+
+
+
+    
+   
+    
+
+
+
+
+    
+
+    
+
+
 
 
 

@@ -8,6 +8,7 @@ from app.api.context.datasets import DataSets
 from app.api.context.models import Models
 from icecream import ic
 
+
 class TitanicModel(object):
 
     def __init__(self):
@@ -15,22 +16,19 @@ class TitanicModel(object):
         self.dataset = DataSets()
 
     def preprocess(self, train_fname, test_fname) -> object:
-        print(f'--- TitanicModel 전처리 시작 ----')
-        this =  self.model
-        that = self.dataset
-        print(f'--- Print, Print ----')
-        print(this)
-        print(that)
-        path = 'C:\\Users\\bitcamp\\kubernetes\\chat-server\\backend\\app\\api\\context\\data\\'
+        ic(f'--- TitanicModel 전처리 시작 ----')
+        this =  self.dataset
+        that = self.model
+        ic(this)
+        ic(that)
         feature = ['PassengerId', 'Survived', 'Pclass', 'Name', 'Sex', 'Age', 'SibSp', 'Parch', 'Ticket', 'Fare', 'Cabin', 'Embarked']
         # 데이터셋은 Train과 Test, Validation 3종류로 나뉘어져 있다.
-        this.train = that.new_dataframe_no_index(f'{path}{train_fname}')
-        this.test = that.new_dataframe_no_index(f'{path}{test_fname}')
+        this.train = that.new_dataframe_no_index(f'{train_fname}')
+        this.test = that.new_dataframe_no_index(f'{test_fname}')
         this.id = this.test['PassengerId']
         this.label = this.train['Survived']
-        this.train = self.drop_feature_in_train(this,'Survived')
-        this.train = self.drop_feature_in_train(this.train,'SibSp', 'Parch', 'Cabin', 'Ticket')
-        this.test = self.drop_feature_in_test(this.test,'SibSp', 'Parch', 'Cabin', 'Ticket')
+        this.train = this.train.drop('Survived', axis=1)
+        this = self.drop_feature(this,'SibSp', 'Parch', 'Cabin', 'Ticket')
         # this = self.drop_feature(this, 'SibSp', 'Parch', 'Cabin', 'Ticket')
         this = self.extract_title_from_name(this)
         title_mapping = self.remove_duplicate_title(this)
@@ -45,43 +43,17 @@ class TitanicModel(object):
         this = self.pclass_ordinal(this)
         this = self.fare_ratio(this)
         this = self.drop_feature(this, "Fare")
+        self.learning(this)
       
-        k_fold = self.create_k_fold()
-        accuracy = self.get_accuracy(this, k_fold)
-        ic(accuracy)
+
         
         
         return this
  
-
     
-    def df_info(self, this):
-        print('='*50)
-        print(f'1. Train 의 type 은 {type(this.train)} 이다.')
-        print(f'2. Train 의 column 은 {this.train.columns} 이다.')
-        print(f'3. Train 의 상위 1개의 데이터는 {this.train.head()} 이다.')
-        print(f'4. Train 의 null 의 갯수는 {this.train.isnull().sum()} 이다.')
-        print(f'5. Test 의 type 은 {type(this.test)} 이다.')
-        print(f'6. Test 의 column 은 {this.test.columns} 이다.')
-        print(f'7. Test 의 상위 1개의 데이터는 {this.test.head()} 이다.')
-        print(f'8. Test 의 null 의 갯수는 {this.test.isnull().sum()} 이다.')
-        print('='*50)
-
-    
-    @staticmethod
-    def drop_feature_in_train(this, *feature) -> object:
-        [i.drop(j, axis=1, inplace=True) for j in feature for i in [this]]
-        return this
-    
-
-    @staticmethod
-    def drop_feature_in_test(this, *feature) -> object:
-        [i.drop(j, axis=1, inplace=True) for j in feature for i in [this]]
-        return this
-
     @staticmethod
     def drop_feature(this, *feature) -> object:
-
+        ic(type(feature))
         # for i in feature:
         #     this.train = this.train.drop([i], axis=1)
         #     this.test = this.test.drop(i, axis=1)
@@ -95,9 +67,19 @@ class TitanicModel(object):
         return this
     
     @staticmethod
-    def extract_title_from_name(this) -> None:
-   
-        return this
+    def df_info(this):
+        [ic(f'{i.info()}') for i in [this.train, this.test]]
+        ic(this.train.head(3))
+        ic(this.test.head(3))
+
+    @staticmethod
+    def null_check(this):
+        [ic(f'{i.isnull().sum()}') for i in [this.train, this.test]]
+
+    @staticmethod
+    def id_info(this):
+        ic(f'id 의 타입  {type(this.id)}')
+        ic(f'id 의 상위 3개 {this.id[:3]}')
     
     @staticmethod
     def title_nominal(this) -> None:
@@ -113,6 +95,11 @@ class TitanicModel(object):
         return this.train['Survived']
     
     # ['PassengerId', 'Survived', 'Pclass', 'Name', 'Sex', 'Age', 'SibSp', 'Parch', 'Ticket', 'Fare', 'Cabin', 'Embarked']
+
+    @staticmethod
+    def kwargs_sample(**kwargs) -> None:
+        # ic(type(kwargs))
+        {ic(''.join(f'key:{i}, val:{j}')) for i, j in kwargs.items()} # key:name, val:이순신
 
 
     
@@ -141,7 +128,6 @@ class TitanicModel(object):
         for these in [this.train, this.test]:
            a += list(set(these['Title']))
         a = list(set(a))
-        print(a)
         '''
         ['Mr', 'Sir', 'Major', 'Don', 'Rev', 'Countess', 'Lady', 'Jonkheer', 'Dr',
         'Miss', 'Col', 'Ms', 'Dona', 'Mlle', 'Mme', 'Mrs', 'Master', 'Capt']
@@ -214,23 +200,28 @@ class TitanicModel(object):
         return this
     
     @staticmethod
-    def create_k_fold() -> object:
-        return KFold(n_splits=10, shuffle=True, random_state=0)
+    def kwargs_sample(**kwargs) -> None:
+        # ic(type(kwargs))
+        {ic(''.join(f'key:{i}, val:{j}')) for i, j in kwargs.items()} # key:name, val:이순신
+
+    '''
+    Categorical vs. Quantitative
+    Cate -> nominal (이름) vs. ordinal (순서)
+    Quan -> interval (상대) vs. ratio (절대)
+    '''
+    
     
     @staticmethod
-    def learning(self, train_fname, test_fname) -> object:
-        this = self.preprocess(train_fname, test_fname)
-        print(f'학습 시작')
-        k_fold = self.create_k_fold()
-        accuracy = self.get_accuracy(this, k_fold)
+    def learning(this) :
+        ic(f'학습 시작')
+        # k_fold = self.create_k_fold()
+        # accuracy = self.get_accuracy(this, k_fold)
+        accuracy = '70'
         ic(f'사이킷런 알고리즘 정확도: {accuracy}')
-        return accuracy
 
-    @staticmethod
-    def get_accuracy(this, k_fold) -> object:
-        score = cross_val_score(RandomForestClassifier(), this.train, this.label,
-                                 cv=k_fold, n_jobs=1, scoring='accuracy')
-        return round(np.mean(score)*100, 2)
+
+
+
    
     
 

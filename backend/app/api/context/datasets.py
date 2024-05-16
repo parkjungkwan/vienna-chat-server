@@ -2,7 +2,9 @@ from dataclasses import dataclass
 import pandas as pd
 
 @dataclass
+
 class DataSets(object): 
+
     _fname: str = '' # file name
     _dname: str = '' # data path
     _sname: str = '' # save path
@@ -10,8 +12,7 @@ class DataSets(object):
     _test: pd.DataFrame = None
     _id: str = ''
     _label: str = ''
-    
-   
+
 
     @property
     def fname(self) -> str: return self._fname

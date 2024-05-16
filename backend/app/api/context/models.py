@@ -1,17 +1,18 @@
 import pandas as pd
 import os
-import icecream as ic
+from icecream import ic
+
 
 from app.api.context.datasets import DataSets
+CONTEXT = 'C:\\Users\\bitcamp\\kubernetes\\chat-server\\backend\\app\\api\\context\\'
 
 
 
 class Models:
     def __init__(self) -> None:
         self.ds = DataSets()
-        print('1--------->')
-        self.ds.dname = './data/'
-        self.ds.sname = './save/'
+        self.ds.dname = f'{CONTEXT}data/'
+        self.ds.sname = f'{CONTEXT}save/'
 
     def new_dataframe_with_index(self, fname: pd.DataFrame) -> pd.DataFrame:
         # index_col=0 해야 기존 index 값이 유지된다

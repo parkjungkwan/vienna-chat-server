@@ -25,7 +25,7 @@ class Member:
 
     @weight.setter
     def weight(self, weight): self._weight = weight
-
+    
 def myRandom(start, end): return random.randint(start, end-1)
 
 def my100(): return myRandom(1,100)

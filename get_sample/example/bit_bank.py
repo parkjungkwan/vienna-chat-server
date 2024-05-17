@@ -1,4 +1,5 @@
 import datetime
+import utils
 today = datetime.datetime.now()
 
 class Account:
@@ -37,7 +38,7 @@ class Account:
     def creat_account_number(these: list):
             name = input('이름')
             money = input('입금액')
-            account_number = f'{myRandom(1000, 10000)}-{myRandom(10, 100)}-{myRandom(100000, 1000000)}'
+            account_number = f'{utils.myRandom(1000, 10000)}-{utils.myRandom(10, 100)}-{utils.myRandom(100000, 1000000)}'
             money = money
             this = Account(name, account_number, money)
             print(f'__str__ 출력')
@@ -63,11 +64,6 @@ class Account:
         pass
         
 
-
-import random        
-
-
-def myRandom(start, end): return random.randint(start, end-1)
 
 if __name__ == "__main__":
     these = []

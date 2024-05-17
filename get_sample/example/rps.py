@@ -1,6 +1,8 @@
 # from example.utils import myRandom
 import random
 
+import utils
+
 # class RPS:
 
 #     def __init__(self) -> None:
@@ -19,9 +21,9 @@ import random
 #             print(f'컴퓨터: {rps[c-1]}, 당신: {p}, 컴퓨터가 이겼습니다')
 
 
-def myRandom(start, end): return random.randint(start, end-1)
+
 if __name__ == "__main__":
-    c = myRandom(1, 4)
+    c = utils.myRandom(1, 4)
     p = input('1, 2, 3:')
     # 1: 가위, 2: 바위, 3: 보
     if p == '1':

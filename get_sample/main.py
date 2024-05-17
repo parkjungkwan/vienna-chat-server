@@ -2,14 +2,16 @@ from fastapi import FastAPI
 import uvicorn
 
 from example.bmi import BMI
+from example.rps import RPS
 
 app = FastAPI()
 
 
 @app.get("/")
 async def root():
-    m = BMI()
-    return {"message": "Hello World 3"}
+    this = RPS()
+    this.play()
+    return {"message": "Hello World"}
 
 
 if __name__ == "__main__":

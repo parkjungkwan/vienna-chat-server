@@ -1,4 +1,4 @@
-from example.utils import Member
+from example.utils import MemberModel
 
 
 class BMI():
@@ -7,7 +7,7 @@ class BMI():
 
     def getBMI(self):
         '''BMI 지수를 계산합니다.'''
-        this = Member()
+        this = MemberModel()
         this.name = '홍길동'
         this.height = 170.8
         this.weight = 80.5

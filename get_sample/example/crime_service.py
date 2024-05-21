@@ -29,7 +29,7 @@ class CrimeService:
         self.data.cctv = 'cctv_in_seoul.csv'
         self.crime_rate_columns = ['살인검거율', '강도검거율', '강간검거율', '절도검거율', '폭력검거율']
         self.crime_columns = ['살인', '강도', '강간', '절도', '폭력']
-        self.arrest_columns = ['살인검거', '강도검거', '강간검거', '절도검거', '폭력검거']
+        self.arrest_columns = ['살인 검거', '강도 검거', '강간 검거', '절도 검거', '폭력 검거']
        
 
     def crime_dataframe(self) -> pd.DataFrame:
@@ -224,11 +224,34 @@ class CrimeService:
         state_geo = reader.json(f'{self.data.dname}kr-states')
         state_data = reader.csv(f'{self.data.sname}police_norm')
         m = folium.Map(location=[37.5502, 126.982], zoom_start=12, title="Stamen Toner")
+        police_position = reader.csv(f'{self.data.sname}police_position')
+        police_norm = reader.csv(f'{self.data.sname}police_norm')
+        crime = self.crime_dataframe()
+        station_names = []
+        for name in crime['관서명']:
+            station_names.append('서울' + str(name[:-1]) + '경찰서')
+        station_addreess = []
+        station_lats = []
+        station_lngs = []
+        gmaps = reader.gmaps(os.environ["api_key"])
+        for name in station_names:
+            t = gmaps.geocode(name, language='ko')
+            station_addreess.append(t[0].get("formatted_address"))
+            t_loc = t[0].get("geometry")
+            station_lats.append(t_loc['location']['lat'])
+            station_lngs.append(t_loc['location']['lng'])
+        police_position['lat'] = station_lats
+        police_position['lng'] = station_lngs
+
+        temp = police_position[self.arrest_columns] / police_position[self.arrest_columns].max()
+        police_position['검거' ] = np.sum(temp, axis=1)
+
+
 
         folium.Choropleth(
             geo_data=state_geo,
             name="choropleth",
-            data=state_data,
+            data=tuple(zip(police_norm['구별'], police_norm['범죄'])),
             columns=["State", "Crime Rate"],
             key_on="feature.id",
             fill_color="PuRd",

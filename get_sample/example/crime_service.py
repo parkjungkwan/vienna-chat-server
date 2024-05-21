@@ -1,6 +1,6 @@
 import os
 import sys
-
+import folium
 import numpy as np
 from sklearn import preprocessing
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -56,39 +56,51 @@ class CrimeService:
     
 
     def save_police_position(self) -> None:
-        station_names = []
+        # station_names = []
         crime = self.crime_dataframe()
-        for name in crime['관서명']:
-            station_names.append('서울' + str(name[:-1]) + '경찰서')
-        station_addreess = []
-        station_lats = []
-        station_lngs = []
+        # for name in crime['관서명']:
+        #     station_names.append('서울' + str(name[:-1]) + '경찰서')
+        # station_addreess = []
+        # station_lats = []
+        # station_lngs = []
+
         reader = Reader()
         gmaps = reader.gmaps(os.environ["api_key"])
-        for name in station_names:
-            t = gmaps.geocode(name, language='ko')
-            print(t)
-            station_addreess.append(t[0].get("formatted_address"))
-            t_loc = t[0].get("geometry")
-            station_lats.append(t_loc['location']['lat'])
-            station_lngs.append(t_loc['location']['lng'])
+        stations = pd.DataFrame(columns=['경찰서명', '위도', '경도', '구별'])
+        stations['경찰서명'] = [ '서울' + str(name[:-1]) + '경찰서' for name in crime['관서명']]
+        for i in range(len(stations['경찰서명'])):
+            tmpMap = gmaps.geocode(stations['경찰서명'][i], language='ko')
+            station_addrs = tmpMap[0].get('geometry')
+            stations['위도'][i] = station_addrs['location']['lat']
+            stations['경도'][i] = station_addrs['location']['lng']
+            stations['구별'][i] = [gu['short_name'] for gu in tmpMap[0]['address_components'] if gu['short_name'][-1] == '구'][0]
+
+
+        # for name in station_names:
+        #     t = gmaps.geocode(name, language='ko')
+        #     print(t)
+        #     station_addreess.append(t[0].get("formatted_address"))
+        #     t_loc = t[0].get("geometry")
+        #     station_lats.append(t_loc['location']['lat'])
+        #     station_lngs.append(t_loc['location']['lng'])
         
-        gu_names = []
-        for name in station_addreess:
-            tmp = name.split()
-            print(tmp)
-            gu_name = [gu for gu in tmp if gu[-1] == '구'][0]
-            gu_names.append(gu_name)
+        # gu_names = []
+        # for name in station_addreess:
+        #     tmp = name.split()
+        #     print(tmp)
+        #     gu_name = [gu for gu in tmp if gu[-1] == '구'][0]
+        #     gu_names.append(gu_name)
         
-        crime['구별'] = gu_names
-        # 구 와 경찰서의 위치가 다른 경우 수작업
-        crime.loc[crime['관서명'] == '혜화서', ['구별']] = '종로구'
-        crime.loc[crime['관서명'] == '서부서', ['구별']] = '은평구'
-        crime.loc[crime['관서명'] == '강서서', ['구별']] = '양천구'
-        crime.loc[crime['관서명'] == '종암서', ['구별']] = '성북구'
-        crime.loc[crime['관서명'] == '방배서', ['구별']] = '서초구'
-        crime.loc[crime['관서명'] == '수서서', ['구별']] = '강남구'
-        crime.to_csv(f'{self.data.sname}police_position.csv')
+        # crime['구별'] = gu_names
+        # # 구 와 경찰서의 위치가 다른 경우 수작업
+        # crime.loc[crime['관서명'] == '혜화서', ['구별']] = '종로구'
+        # crime.loc[crime['관서명'] == '서부서', ['구별']] = '은평구'
+        # crime.loc[crime['관서명'] == '강서서', ['구별']] = '양천구'
+        # crime.loc[crime['관서명'] == '종암서', ['구별']] = '성북구'
+        # crime.loc[crime['관서명'] == '방배서', ['구별']] = '서초구'
+        # crime.loc[crime['관서명'] == '수서서', ['구별']] = '강남구'
+        # crime.to_csv(f'{self.data.sname}police_position.csv')
+        stations.to_csv(f'{self.data.sname}police_position.csv')
 
     def save_cctv_per_population(self) -> None:
         reader = Reader()
@@ -187,12 +199,47 @@ class CrimeService:
 
 
     def folium_test(self):
-        pass
+        reader = Reader()
+        state_geo = reader.json(f'{self.data.dname}us-states')
+        state_data = reader.csv(f'{self.data.dname}us_unemployment')
+        m = folium.Map(location=[48, -102], zoom_start=3)
 
+        folium.Choropleth(
+            geo_data=state_geo,
+            name="choropleth",
+            data=state_data,
+            columns=["State", "Unemployment"],
+            key_on="feature.id",
+            fill_color="YlGn",
+            fill_opacity=0.7,
+            line_opacity=0.2,
+            legend_name="Unemployment Rate (%)",
+        ).add_to(m)
 
-        
+        folium.LayerControl().add_to(m)
+        m.save(f'{self.data.sname}us_states.html')
 
-        
+    def draw_crime_map(self):
+        reader = Reader()
+        state_geo = reader.json(f'{self.data.dname}kr-states')
+        state_data = reader.csv(f'{self.data.sname}police_norm')
+        m = folium.Map(location=[37.5502, 126.982], zoom_start=12, title="Stamen Toner")
+
+        folium.Choropleth(
+            geo_data=state_geo,
+            name="choropleth",
+            data=state_data,
+            columns=["State", "Crime Rate"],
+            key_on="feature.id",
+            fill_color="PuRd",
+            fill_opacity=0.7,
+            line_opacity=0.2,
+            legend_name="Crime Rate (%)",
+        ).add_to(m)
+
+        folium.LayerControl().add_to(m)
+        m.save(f'{self.data.sname}kr_states.html')
+
 
 
     
@@ -204,7 +251,9 @@ if __name__ == "__main__":
     # print(cctv_df)
     # service.save_police_position()
     # service.save_cctv_per_population()
-    service.save_crime_arrest_normalization()
+    # service.save_crime_arrest_normalization()
+    # service.folium_test()
+    service.draw_crime_map()
     
 
 

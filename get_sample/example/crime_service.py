@@ -143,11 +143,11 @@ class CrimeService:
         print('피봇 결과 :')
         ic(police)
 
-        police['살인검거율'] = police['살인검거'].astype(int) / police['강간 발생'].astype(int) * 100
-        police['강도검거율'] = police['강도검거'].astype(int) / police['강도 발생'].astype(int) * 100
-        police['강간검거율'] = police['강간검거'].astype(int) / police['살인 발생'].astype(int) * 100
-        police['절도검거율'] = police['절도검거'].astype(int) / police['절도 발생'].astype(int) * 100
-        police['폭력검거율'] = police['폭력검거'].astype(int) / police['폭력 발생'].astype(int) * 100
+        police['살인검거율'] = police['살인 검거'].astype(int) / police['강간 발생'].astype(int) * 100
+        police['강도검거율'] = police['강도 검거'].astype(int) / police['강도 발생'].astype(int) * 100
+        police['강간검거율'] = police['강간 검거'].astype(int) / police['살인 발생'].astype(int) * 100
+        police['절도검거율'] = police['절도 검거'].astype(int) / police['절도 발생'].astype(int) * 100
+        police['폭력검거율'] = police['폭력 검거'].astype(int) / police['폭력 발생'].astype(int) * 100
         police.drop(['강간 검거', '강도 검거', '살인 검거', '절도 검거', '폭력 검거'], axis=1, inplace=True)
 
         for i in self.crime_rate_columns:
@@ -203,7 +203,8 @@ if __name__ == "__main__":
     # print(crime_df)
     # print(cctv_df)
     # service.save_police_position()
-    service.save_cctv_per_population()
+    # service.save_cctv_per_population()
+    service.save_crime_arrest_normalization()
     
 
 

@@ -56,51 +56,50 @@ class CrimeService:
     
 
     def save_police_position(self) -> None:
-        # station_names = []
+        station_names = []
         crime = self.crime_dataframe()
-        # for name in crime['관서명']:
-        #     station_names.append('서울' + str(name[:-1]) + '경찰서')
-        # station_addreess = []
-        # station_lats = []
-        # station_lngs = []
+        for name in crime['관서명']:
+            station_names.append('서울' + str(name[:-1]) + '경찰서')
+        station_addreess = []
+        station_lats = []
+        station_lngs = []
 
         reader = Reader()
         gmaps = reader.gmaps(os.environ["api_key"])
-        stations = pd.DataFrame(columns=['경찰서명', '위도', '경도', '구별'])
-        stations['경찰서명'] = [ '서울' + str(name[:-1]) + '경찰서' for name in crime['관서명']]
-        for i in range(len(stations['경찰서명'])):
-            tmpMap = gmaps.geocode(stations['경찰서명'][i], language='ko')
-            station_addrs = tmpMap[0].get('geometry')
-            stations['위도'][i] = station_addrs['location']['lat']
-            stations['경도'][i] = station_addrs['location']['lng']
-            stations['구별'][i] = [gu['short_name'] for gu in tmpMap[0]['address_components'] if gu['short_name'][-1] == '구'][0]
+        # stations = pd.DataFrame(columns=['경찰서명', '위도', '경도', '구별'])
+        # stations['경찰서명'] = [ '서울' + str(name[:-1]) + '경찰서' for name in crime['관서명']]
+        # for i in range(len(stations['경찰서명'])):
+        #     tmpMap = gmaps.geocode(stations['경찰서명'][i], language='ko')
+        #     station_addrs = tmpMap[0].get('geometry')
+        #     stations['위도'][i] = station_addrs['location']['lat']
+        #     stations['경도'][i] = station_addrs['location']['lng']
+        #     stations['구별'][i] = [gu['short_name'] for gu in tmpMap[0]['address_components'] if gu['short_name'][-1] == '구'][0]
 
 
-        # for name in station_names:
-        #     t = gmaps.geocode(name, language='ko')
-        #     print(t)
-        #     station_addreess.append(t[0].get("formatted_address"))
-        #     t_loc = t[0].get("geometry")
-        #     station_lats.append(t_loc['location']['lat'])
-        #     station_lngs.append(t_loc['location']['lng'])
+        for name in station_names:
+            t = gmaps.geocode(name, language='ko')
+            print(t)
+            station_addreess.append(t[0].get("formatted_address"))
+            t_loc = t[0].get("geometry")
+            station_lats.append(t_loc['location']['lat'])
+            station_lngs.append(t_loc['location']['lng'])
         
-        # gu_names = []
-        # for name in station_addreess:
-        #     tmp = name.split()
-        #     print(tmp)
-        #     gu_name = [gu for gu in tmp if gu[-1] == '구'][0]
-        #     gu_names.append(gu_name)
+        gu_names = []
+        for name in station_addreess:
+            tmp = name.split()
+            print(tmp)
+            gu_name = [gu for gu in tmp if gu[-1] == '구'][0]
+            gu_names.append(gu_name)
         
-        # crime['구별'] = gu_names
-        # # 구 와 경찰서의 위치가 다른 경우 수작업
-        # crime.loc[crime['관서명'] == '혜화서', ['구별']] = '종로구'
-        # crime.loc[crime['관서명'] == '서부서', ['구별']] = '은평구'
-        # crime.loc[crime['관서명'] == '강서서', ['구별']] = '양천구'
-        # crime.loc[crime['관서명'] == '종암서', ['구별']] = '성북구'
-        # crime.loc[crime['관서명'] == '방배서', ['구별']] = '서초구'
-        # crime.loc[crime['관서명'] == '수서서', ['구별']] = '강남구'
-        # crime.to_csv(f'{self.data.sname}police_position.csv')
-        stations.to_csv(f'{self.data.sname}police_position.csv')
+        crime['구별'] = gu_names
+        # 구 와 경찰서의 위치가 다른 경우 수작업
+        crime.loc[crime['관서명'] == '혜화서', ['구별']] = '종로구'
+        crime.loc[crime['관서명'] == '서부서', ['구별']] = '은평구'
+        crime.loc[crime['관서명'] == '종암서', ['구별']] = '성북구'
+        crime.loc[crime['관서명'] == '방배서', ['구별']] = '서초구'
+        crime.loc[crime['관서명'] == '수서서', ['구별']] = '강남구'
+        crime.to_csv(f'{self.data.sname}police_position.csv')
+        # stations.to_csv(f'{self.data.sname}police_position.csv')
 
     def save_cctv_per_population(self) -> None:
         reader = Reader()
@@ -151,13 +150,15 @@ class CrimeService:
         crime = self.crime_dataframe()
         reader = Reader()
         police_position = reader.csv(f'{self.data.sname}police_position')
+        print('피봇 이전 :')
+        ic(police_position)
         police = pd.pivot_table(police_position, index='구별', aggfunc=np.sum)
         print('피봇 결과 :')
         ic(police)
 
-        police['살인검거율'] = police['살인 검거'].astype(int) / police['강간 발생'].astype(int) * 100
+        police['살인검거율'] = police['살인 검거'].astype(int) / police['살인 발생'].astype(int) * 100
         police['강도검거율'] = police['강도 검거'].astype(int) / police['강도 발생'].astype(int) * 100
-        police['강간검거율'] = police['강간 검거'].astype(int) / police['살인 발생'].astype(int) * 100
+        police['강간검거율'] = police['강간 검거'].astype(int) / police['강간 발생'].astype(int) * 100
         police['절도검거율'] = police['절도 검거'].astype(int) / police['절도 발생'].astype(int) * 100
         police['폭력검거율'] = police['폭력 검거'].astype(int) / police['폭력 발생'].astype(int) * 100
         police.drop(['강간 검거', '강도 검거', '살인 검거', '절도 검거', '폭력 검거'], axis=1, inplace=True)
@@ -229,15 +230,23 @@ class CrimeService:
         crime = self.crime_dataframe()
         station_names = []
         for name in crime['관서명']:
-            station_names.append('서울' + str(name[:-1]) + '경찰서')
+            sample = '서울' + str(name[:-1]) + '경찰서'
+            print(f'---> {sample}')
+            station_names.append(sample)
         station_addreess = []
         station_lats = []
         station_lngs = []
         gmaps = reader.gmaps(os.environ["api_key"])
-        for name in station_names:
-            t = gmaps.geocode(name, language='ko')
-            station_addreess.append(t[0].get("formatted_address"))
-            t_loc = t[0].get("geometry")
+        for i, name in enumerate(station_names):
+    
+            # if name == '서울강서경찰서':
+            #     print('서울강서경찰서 위치가 정확하지 않아 수동으로 입력합니다.')
+            #     temp = gmaps.geocode(name, language='ko')
+            # else:
+            #     print('서울종암경찰서 위치가 정확하지 않아 수동으로 입력합니다.')
+            #     temp = self.jongam_police_info()
+            station_addreess.append(temp[0].get("formatted_address"))
+            t_loc = temp[0].get("geometry")
             station_lats.append(t_loc['location']['lat'])
             station_lngs.append(t_loc['location']['lng'])
         police_position['lat'] = station_lats
@@ -245,8 +254,6 @@ class CrimeService:
 
         temp = police_position[self.arrest_columns] / police_position[self.arrest_columns].max()
         police_position['검거' ] = np.sum(temp, axis=1)
-
-
 
         folium.Choropleth(
             geo_data=state_geo,
@@ -262,6 +269,27 @@ class CrimeService:
 
         folium.LayerControl().add_to(m)
         m.save(f'{self.data.sname}kr_states.html')
+
+    def jongam_police_info(self):
+        return [{'address_components':
+                             [{'long_name': '32', 'short_name': '32', 'types': ['premise']},
+                              {'long_name': '화랑로7길', 'short_name': '화랑로7길',
+                               'types': ['political', 'sublocality', 'sublocality_level_4']},
+                              {'long_name': '성북구', 'short_name': '성북구',
+                               'types': ['political', 'sublocality', 'sublocality_level_1']},
+                              {'long_name': '서울특별시', 'short_name': '서울특별시',
+                               'types': ['administrative_area_level_1', 'political']},
+                              {'long_name': '대한민국', 'short_name': 'KR', 'types': ['country', 'political']},
+                              {'long_name': '100-032', 'short_name': '100-032', 'types': ['postal_code']}],
+                         'formatted_address': '대한민국 서울특별시 성북구 화랑로7길 32',
+                         'geometry': {'location':
+                                          {'lat': 37.60388169879458, 'lng': 127.04001571848704},
+                                      'location_type': 'ROOFTOP',
+                                      'viewport': {'northeast': {'lat': 37.60388169879458, 'lng': 127.04001571848704},
+                                                   'southwest': {'lat': 37.60388169879458, 'lng': 127.04001571848704}}},
+                         'partial_match': True, 'place_id': 'ChIJc-9q5uSifDURLhQmr5wkXmc',
+                         'plus_code': {'compound_code': 'HX7Q+CV 대한민국 서울특별시', 'global_code': '8Q98HX7Q+CV'},
+                         'types': ['establishment', 'point_of_interest', 'police']}]
 
 
 

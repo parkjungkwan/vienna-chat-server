@@ -231,20 +231,13 @@ class CrimeService:
         station_names = []
         for name in crime['관서명']:
             sample = '서울' + str(name[:-1]) + '경찰서'
-            print(f'---> {sample}')
             station_names.append(sample)
         station_addreess = []
         station_lats = []
         station_lngs = []
         gmaps = reader.gmaps(os.environ["api_key"])
         for i, name in enumerate(station_names):
-    
-            # if name == '서울강서경찰서':
-            #     print('서울강서경찰서 위치가 정확하지 않아 수동으로 입력합니다.')
-            #     temp = gmaps.geocode(name, language='ko')
-            # else:
-            #     print('서울종암경찰서 위치가 정확하지 않아 수동으로 입력합니다.')
-            #     temp = self.jongam_police_info()
+            temp = gmaps.geocode(name, language='ko')
             station_addreess.append(temp[0].get("formatted_address"))
             t_loc = temp[0].get("geometry")
             station_lats.append(t_loc['location']['lat'])
@@ -265,32 +258,15 @@ class CrimeService:
             fill_opacity=0.7,
             line_opacity=0.2,
             legend_name="Crime Rate (%)",
+            reset=True
         ).add_to(m)
+        for i in police_position.index:
+            folium.CircleMarker([police_position['lat'][i], police_position['lng'][i]],
+                          radius=police_position['검거'][i] * 10,
+                          fill_color='#0a0a32').add_to(m)
 
         folium.LayerControl().add_to(m)
         m.save(f'{self.data.sname}kr_states.html')
-
-    def jongam_police_info(self):
-        return [{'address_components':
-                             [{'long_name': '32', 'short_name': '32', 'types': ['premise']},
-                              {'long_name': '화랑로7길', 'short_name': '화랑로7길',
-                               'types': ['political', 'sublocality', 'sublocality_level_4']},
-                              {'long_name': '성북구', 'short_name': '성북구',
-                               'types': ['political', 'sublocality', 'sublocality_level_1']},
-                              {'long_name': '서울특별시', 'short_name': '서울특별시',
-                               'types': ['administrative_area_level_1', 'political']},
-                              {'long_name': '대한민국', 'short_name': 'KR', 'types': ['country', 'political']},
-                              {'long_name': '100-032', 'short_name': '100-032', 'types': ['postal_code']}],
-                         'formatted_address': '대한민국 서울특별시 성북구 화랑로7길 32',
-                         'geometry': {'location':
-                                          {'lat': 37.60388169879458, 'lng': 127.04001571848704},
-                                      'location_type': 'ROOFTOP',
-                                      'viewport': {'northeast': {'lat': 37.60388169879458, 'lng': 127.04001571848704},
-                                                   'southwest': {'lat': 37.60388169879458, 'lng': 127.04001571848704}}},
-                         'partial_match': True, 'place_id': 'ChIJc-9q5uSifDURLhQmr5wkXmc',
-                         'plus_code': {'compound_code': 'HX7Q+CV 대한민국 서울특별시', 'global_code': '8Q98HX7Q+CV'},
-                         'types': ['establishment', 'point_of_interest', 'police']}]
-
 
 
     
